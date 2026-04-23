@@ -1,7 +1,9 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Player ship - di chuyển WASD/Arrow + bắn Space/Auto
+/// Sử dụng New Input System
 /// </summary>
 public class PlayerController : MonoBehaviour
 {
@@ -23,6 +25,10 @@ public class PlayerController : MonoBehaviour
     private Camera mainCam;
     private Vector2 screenBoundsMin;
     private Vector2 screenBoundsMax;
+
+    // New Input System
+    private Vector2 moveInput;
+    private bool isShooting;
 
     private void Awake()
     {
@@ -46,19 +52,36 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Playing)
+        // Allow input if GameManager not initialized yet OR state is Playing
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing)
             return;
 
+        ReadInput();
         HandleMovement();
         HandleShooting();
     }
 
+    private void ReadInput()
+    {
+        // New Input System - đọc keyboard trực tiếp
+        var kb = Keyboard.current;
+        if (kb == null) return;
+
+        float h = 0f;
+        float v = 0f;
+
+        if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) h = -1f;
+        if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) h = 1f;
+        if (kb.wKey.isPressed || kb.upArrowKey.isPressed) v = 1f;
+        if (kb.sKey.isPressed || kb.downArrowKey.isPressed) v = -1f;
+
+        moveInput = new Vector2(h, v);
+        isShooting = kb.spaceKey.isPressed || kb.jKey.isPressed;
+    }
+
     private void HandleMovement()
     {
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
-
-        Vector3 move = new Vector3(h, v, 0f).normalized * moveSpeed * Time.deltaTime;
+        Vector3 move = new Vector3(moveInput.x, moveInput.y, 0f).normalized * moveSpeed * Time.deltaTime;
         transform.position += move;
 
         // Clamp to screen bounds
@@ -70,7 +93,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleShooting()
     {
-        if (Input.GetKey(KeyCode.Space) && Time.time >= nextFireTime)
+        if (isShooting && Time.time >= nextFireTime)
         {
             Fire();
             nextFireTime = Time.time + fireRate;
@@ -79,9 +102,19 @@ public class PlayerController : MonoBehaviour
 
     private void Fire()
     {
-        if (projectilePrefab == null || shootPoint == null) return;
+        if (projectilePrefab == null)
+        {
+            Debug.LogError("PlayerController: projectilePrefab is NULL!");
+            return;
+        }
+        if (shootPoint == null)
+        {
+            Debug.LogError("PlayerController: shootPoint is NULL!");
+            return;
+        }
 
-        Instantiate(projectilePrefab, shootPoint.position, Quaternion.identity);
+        var bullet = Instantiate(projectilePrefab, shootPoint.position, Quaternion.identity);
+        Debug.Log($"FIRED! Bullet spawned at {shootPoint.position}, obj={bullet.name}");
 
         if (shootSound != null && audioSource != null)
         {

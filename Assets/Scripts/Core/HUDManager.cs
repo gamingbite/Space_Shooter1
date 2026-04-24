@@ -41,6 +41,11 @@ public class HUDManager : MonoBehaviour
         UpdateEnemyKills(0);
         UpdateMeteorKills(0);
         UpdateWave(0);
+
+        if (GameManager.Instance != null)
+        {
+            HandleStateChanged(GameManager.Instance.CurrentState);
+        }
     }
 
     private void UpdateHealth(float current, float max)

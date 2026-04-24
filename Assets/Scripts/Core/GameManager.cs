@@ -44,6 +44,14 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        SetState(GameState.Menu);
+    }
+
+    public void StartGame()
+    {
+        EnemyKills = 0;
+        MeteorKills = 0;
+        CurrentWave = 0;
         SetState(GameState.Playing);
     }
 
@@ -54,6 +62,9 @@ public class GameManager : MonoBehaviour
 
         switch (newState)
         {
+            case GameState.Menu:
+                // Time.timeScale = 1f; // If we want background to move
+                break;
             case GameState.Playing:
                 Time.timeScale = 1f;
                 break;

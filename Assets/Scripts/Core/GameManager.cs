@@ -26,10 +26,13 @@ public class GameManager : MonoBehaviour
     public event Action<int> OnWaveChanged;
     public event Action<int> OnScoreChanged;
     public event Action OnPlayerDied;
+    public event Action OnBossSpawned;
+    public event Action OnBossDefeated;
 
     // Stats
     public int EnemyKills { get; private set; }
     public int MeteorKills { get; private set; }
+    public int BossKills { get; private set; }
     public int CurrentWave { get; private set; }
     public int Score { get; private set; }
     public int HighscoreEnemyKills { get; private set; }
@@ -58,6 +61,7 @@ public class GameManager : MonoBehaviour
     {
         EnemyKills = 0;
         MeteorKills = 0;
+        BossKills = 0;
         CurrentWave = 0;
         Score = 0;
         OnScoreChanged?.Invoke(0);
@@ -72,7 +76,7 @@ public class GameManager : MonoBehaviour
         switch (newState)
         {
             case GameState.Menu:
-                // Time.timeScale = 1f; // If we want background to move
+                Time.timeScale = 1f;
                 break;
             case GameState.Playing:
                 Time.timeScale = 1f;
@@ -108,6 +112,19 @@ public class GameManager : MonoBehaviour
     {
         CurrentWave = wave;
         OnWaveChanged?.Invoke(wave);
+    }
+
+    public void NotifyBossSpawned()
+    {
+        OnBossSpawned?.Invoke();
+    }
+
+    public void AddBossKill(int scoreBonus)
+    {
+        BossKills++;
+        Score += scoreBonus;
+        OnScoreChanged?.Invoke(Score);
+        OnBossDefeated?.Invoke();
     }
 
     public void PlayerDied()

@@ -189,7 +189,7 @@ MonoBehaviour:
   rotationSpeed: 50
   horizontalSpeed: 0.3
   contactDamage: 30
-  explosionPrefab: {fileID: 1483451764396368, guid: 9983f31835956cf4c8815a7000a365e2, type: 3}
+  explosionPrefab: {fileID: 0}
   explosionSound: {fileID: 8300000, guid: 46bcc371f599a62428eb964fb644457c, type: 3}
   healthPickupPrefab: {fileID: 7561195356419693593, guid: a740eabda0881764ab1f3723391731a0, type: 3}
   weaponPickupPrefab: {fileID: 1151976456325796755, guid: d60270f06d15da14ea76dda8e3786508, type: 3}

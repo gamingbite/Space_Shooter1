@@ -189,13 +189,12 @@ MonoBehaviour:
   horizontalDrift: 0.5
   driftFrequency: 1
   contactDamage: 20
-  explosionPrefab: {fileID: 1516502056755872, guid: b32acdabb4f7b7342ad2dff9986cb44f, type: 3}
+  explosionPrefab: {fileID: 0}
   explosionSound: {fileID: 8300000, guid: cef28ad044b48624fbfeba734e9d6447, type: 3}
   projectilePrefab: {fileID: 4405848523826888650, guid: 99d9d85c9a7f4e54d86dcc34a2a1a8f9, type: 3}
   shootPoint: {fileID: 0}
   fireInterval: 2.5
   shootSound: {fileID: 0}
-  scoreValue: 100
 --- !u!114 &3039711441687537654
 MonoBehaviour:
   m_ObjectHideFlags: 0

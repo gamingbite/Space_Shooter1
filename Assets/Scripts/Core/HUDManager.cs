@@ -35,7 +35,7 @@ public class HUDManager : MonoBehaviour
     private void Start()
     {
         // Tự tìm Player Damageable lúc runtime
-        PlayerController player = FindObjectOfType<PlayerController>(true);
+        PlayerController player = FindFirstObjectByType<PlayerController>(FindObjectsInactive.Include);
         if (player != null)
         {
             playerDamageable = player.GetComponent<Damageable>();
@@ -74,6 +74,25 @@ public class HUDManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        // Tự động quét tìm Player nếu chưa có (hỗ trợ trường hợp player respawn)
+        if (playerDamageable == null)
+        {
+            PlayerController player = FindFirstObjectByType<PlayerController>(FindObjectsInactive.Include);
+            if (player != null)
+            {
+                playerDamageable = player.GetComponent<Damageable>();
+                if (playerDamageable != null)
+                {
+                    playerDamageable.OnHealthChanged -= UpdateHealth; // Tránh subscribe 2 lần
+                    playerDamageable.OnHealthChanged += UpdateHealth;
+                    UpdateHealth(playerDamageable.CurrentHealth, playerDamageable.MaxHealth);
+                }
+            }
+        }
+    }
+
     private void UpdateHealth(float current, float max)
     {
         if (healthBarFill != null)
@@ -81,6 +100,10 @@ public class HUDManager : MonoBehaviour
             float fill = max > 0 ? current / max : 0f;
             healthBarFill.fillAmount = fill;
             Debug.Log($"[HUDManager] Health updated: {current}/{max} → fillAmount={fill}");
+        }
+        if (healthLabel != null)
+        {
+            healthLabel.text = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
         }
     }
 

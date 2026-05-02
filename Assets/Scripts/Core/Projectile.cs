@@ -1,9 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// Projectile - bay theo direction, gây damage khi va chạm
-/// Spawn explosion effect TẠI VỊ TRÍ TARGET (không phải vị trí đạn)
-/// Dùng explode_2_0 prefab từ Resources
+/// Projectile - bay theo direction, gây damage khi va chạm.
+/// - Đạn PLAYER: spawn ExplosionVFX nhỏ khi trúng enemy/meteor
+/// - Đạn ENEMY: spawn ExplosionVFX khi trúng player
 /// </summary>
 public class Projectile : MonoBehaviour
 {
@@ -13,7 +13,9 @@ public class Projectile : MonoBehaviour
     [SerializeField] private Vector2 direction = Vector2.up;
     [SerializeField] private bool isEnemyProjectile = false;
 
-    private static GameObject _hitExplosionPrefab;
+    // Cache prefab - load 1 lần dùng mãi
+    private static GameObject _playerHitVFX;   // Dùng cho đạn player trúng enemy
+    private static GameObject _enemyHitVFX;    // Dùng cho đạn enemy trúng player
 
     private void Start()
     {
@@ -36,45 +38,59 @@ public class Projectile : MonoBehaviour
     }
 
     /// <summary>
-    /// Spawn explosion effect TẠI VỊ TRÍ TARGET (trên enemy/player bị trúng)
+    /// Spawn ExplosionVFX tại vị trí va chạm
+    /// scale: 1.0 = kích thước bình thường, < 1 = nhỏ hơn
     /// </summary>
-    private void SpawnHitEffect(Vector3 targetPosition)
+    private void SpawnHitVFX(Vector3 position, float scale = 1f)
     {
-        if (_hitExplosionPrefab == null)
-            _hitExplosionPrefab = Resources.Load<GameObject>("Effects/Explode2");
-
-        if (_hitExplosionPrefab != null)
+        // Load từ Resources/Effects/ExplosionVFX
+        if (!isEnemyProjectile)
         {
-            var fx = Instantiate(_hitExplosionPrefab, targetPosition, Quaternion.identity);
-            Destroy(fx, 0.5f); // Fallback - AutoDestroy sẽ tự hủy theo animation length
+            if (_playerHitVFX == null)
+                _playerHitVFX = Resources.Load<GameObject>("Effects/ExplosionVFX");
         }
+        else
+        {
+            if (_enemyHitVFX == null)
+                _enemyHitVFX = Resources.Load<GameObject>("Effects/ExplosionVFX");
+        }
+
+        var prefab = isEnemyProjectile ? _enemyHitVFX : _playerHitVFX;
+        if (prefab == null) return;
+
+        var fx = Instantiate(prefab, position, Quaternion.identity);
+        if (scale != 1f)
+            fx.transform.localScale = Vector3.one * scale;
+
+        // AutoDestroy sẽ tự hủy, backup 2s
+        Destroy(fx, 2f);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (isEnemyProjectile)
         {
-            // Đạn enemy chỉ gây damage player
+            // Đạn enemy → chỉ damage player
             if (!other.CompareTag("Player")) return;
 
             var damageable = other.GetComponent<Damageable>();
             if (damageable != null)
             {
                 damageable.TakeDamage(damage);
-                SpawnHitEffect(other.transform.position); // Nổ tại vị trí player
+                SpawnHitVFX(other.transform.position, 0.6f); // Nổ nhỏ khi player bị trúng
                 Destroy(gameObject);
             }
         }
         else
         {
-            // Đạn player - không damage player, chỉ damage enemy/meteor
+            // Đạn player → không damage player, chỉ damage enemy/meteor
             if (other.CompareTag("Player")) return;
 
             var damageable = other.GetComponent<Damageable>();
             if (damageable != null)
             {
                 damageable.TakeDamage(damage);
-                SpawnHitEffect(other.transform.position); // Nổ tại vị trí enemy/meteor
+                SpawnHitVFX(other.transform.position, 0.5f); // Nổ nhỏ khi bắn trúng enemy
                 Destroy(gameObject);
             }
         }

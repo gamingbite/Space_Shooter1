@@ -21,8 +21,6 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float fireInterval = 2.5f;
     [SerializeField] private AudioClip shootSound;
 
-    [Header("Score")]
-    [SerializeField] private int scoreValue = 1;
 
     private Damageable damageable;
     private float driftOffset;

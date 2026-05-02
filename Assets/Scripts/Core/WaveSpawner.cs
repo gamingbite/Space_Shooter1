@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Spawner - spawn waves enemy + meteor tăng dần theo wave
+/// Sau Wave 5: Spawn Boss C7 với warning screen
+/// Sau boss chết: tiếp tục wave 6+
 /// </summary>
 public class WaveSpawner : MonoBehaviour
 {
@@ -15,7 +17,6 @@ public class WaveSpawner : MonoBehaviour
 
     [Header("Meteor Spawning")]
     [SerializeField] private GameObject[] meteorPrefabs;
-    [SerializeField] private int baseMeteorCount = 1;
     [SerializeField] private float meteorSpawnInterval = 3f;
 
     [Header("Spawn Area")]
@@ -27,9 +28,16 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private float waveCooldown = 3f;
     [SerializeField] private float initialDelay = 2f;
 
+    [Header("Boss C7")]
+    [SerializeField] private GameObject bossC7Prefab;
+    [SerializeField] private int bossWaveInterval = 5;      // Boss xuất hiện mỗi N wave
+    [SerializeField] private BossWarningUI bossWarningUI;   // Kéo vào Inspector
+    [SerializeField] private BossHealthBarUI bossHealthBarUI; // Kéo vào Inspector
+    [SerializeField] private string bossDisplayName = "C7 — Ưng Thép";
+
     private int currentWave = 0;
-    private bool isSpawning = false;
     private List<GameObject> activeEnemies = new List<GameObject>();
+    private bool isBossAlive = false;
 
     private void Start()
     {
@@ -53,11 +61,19 @@ public class WaveSpawner : MonoBehaviour
             if (GameManager.Instance != null)
                 GameManager.Instance.SetWave(currentWave);
 
-            int enemyCount = baseEnemyCount + (currentWave - 1) * enemiesPerWaveIncrease;
+            // ===== Boss Wave Check =====
+            if (bossC7Prefab != null && currentWave % bossWaveInterval == 0)
+            {
+                yield return StartCoroutine(BossWaveRoutine());
+                yield return new WaitForSeconds(waveCooldown);
+                continue;
+            }
 
+            // ===== Normal Wave =====
+            int enemyCount = baseEnemyCount + (currentWave - 1) * enemiesPerWaveIncrease;
             yield return StartCoroutine(SpawnWave(enemyCount));
 
-            // Wait until all enemies are destroyed
+            // Chờ hết enemies
             yield return new WaitUntil(() =>
             {
                 activeEnemies.RemoveAll(e => e == null);
@@ -72,10 +88,88 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
+    // ───────── Boss Wave Routine ─────────
+    private IEnumerator BossWaveRoutine()
+    {
+        // Xóa hết enemies đang còn
+        CleanupAllEnemies();
+
+        // 1. Hiện WARNING screen
+        if (bossWarningUI != null)
+        {
+            bool warningDone = false;
+            bossWarningUI.ShowWarning(bossDisplayName, () => warningDone = true);
+            yield return new WaitUntil(() => warningDone);
+        }
+        else
+        {
+            // Fallback: chờ 2s
+            yield return new WaitForSeconds(2f);
+        }
+
+        // 2. Spawn Boss
+        if (bossC7Prefab == null) yield break;
+
+        var bossGO = Instantiate(bossC7Prefab, new Vector3(0f, 9f, 0f), Quaternion.identity);
+        var boss = bossGO.GetComponent<BossController>();
+
+        if (boss == null) yield break;
+
+        // Thêm collider với bullet để damage
+        AddBulletDamageHandler(bossGO, boss);
+
+        isBossAlive = true;
+        GameManager.Instance?.NotifyBossSpawned();
+
+        // 3. Báo cho HP Bar track boss
+        if (bossHealthBarUI != null)
+            bossHealthBarUI.TrackBoss(boss, bossDisplayName);
+
+        // 4. Subscribe sự kiện boss chết
+        boss.OnDeath += () => isBossAlive = false;
+
+        // 5. Chờ boss chết
+        yield return new WaitUntil(() =>
+        {
+            return !isBossAlive ||
+                   (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing);
+        });
+
+        yield return new WaitForSeconds(1.5f); // Pause nhỏ sau boss chết
+    }
+
+    /// <summary>
+    /// Thêm Damageable + BossDamageProxy để đạn player damage boss qua Projectile system
+    /// </summary>
+    private void AddBulletDamageHandler(GameObject bossGO, BossController boss)
+    {
+        // Đảm bảo có Damageable để Projectile.OnTriggerEnter2D có thể gọi TakeDamage
+        var damageable = bossGO.GetComponent<Damageable>();
+        if (damageable == null)
+            damageable = bossGO.AddComponent<Damageable>();
+
+        // SetMaxHealth để Damageable không die riêng - proxy sẽ forward sang BossController
+        damageable.SetMaxHealth(99999f);
+
+        // BossDamageProxy intercepts damage → forward sang BossController
+        var proxy = bossGO.AddComponent<BossDamageProxy>();
+        proxy.Init(boss, damageable);
+    }
+
+    private void CleanupAllEnemies()
+    {
+        foreach (var e in activeEnemies)
+            if (e != null) Destroy(e);
+        activeEnemies.Clear();
+
+        // Xóa tất cả enemy còn lại trong scene
+        var allEnemies = GameObject.FindObjectsOfType<EnemyController>();
+        foreach (var e in allEnemies)
+            Destroy(e.gameObject);
+    }
+
     private IEnumerator SpawnWave(int count)
     {
-        isSpawning = true;
-
         for (int i = 0; i < count; i++)
         {
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Playing)
@@ -92,8 +186,6 @@ public class WaveSpawner : MonoBehaviour
 
             yield return new WaitForSeconds(enemySpawnDelay);
         }
-
-        isSpawning = false;
     }
 
     private IEnumerator MeteorSpawnLoop()
@@ -108,6 +200,13 @@ public class WaveSpawner : MonoBehaviour
                 continue;
             }
 
+            // Không spawn meteor trong boss wave
+            if (isBossAlive)
+            {
+                yield return new WaitForSeconds(1f);
+                continue;
+            }
+
             if (meteorPrefabs != null && meteorPrefabs.Length > 0)
             {
                 float x = Random.Range(spawnXMin, spawnXMax);
@@ -115,12 +214,9 @@ public class WaveSpawner : MonoBehaviour
 
                 var meteorPrefab = meteorPrefabs[Random.Range(0, meteorPrefabs.Length)];
                 if (meteorPrefab != null)
-                {
                     Instantiate(meteorPrefab, spawnPos, Quaternion.identity);
-                }
             }
 
-            // Decrease interval slightly as waves increase
             float interval = Mathf.Max(1f, meteorSpawnInterval - (currentWave * 0.2f));
             yield return new WaitForSeconds(interval);
         }

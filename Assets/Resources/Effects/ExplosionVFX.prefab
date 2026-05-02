@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4178660819077561715
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1874309353818609981}
+  - component: {fileID: 1444272815097741294}
+  - component: {fileID: 3151359604283773350}
+  m_Layer: 0
+  m_Name: ExplosionVFX
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1874309353818609981
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4178660819077561715}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1444272815097741294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4178660819077561715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49356988fc4615d4085661ed5680df92, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoDestroy
+  lifetime: 1.5
+--- !u!114 &3151359604283773350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4178660819077561715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13e44b61c3789e04c92570bb2383035d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExplosionVFX
+  coreColorStart: {r: 1, g: 1, b: 0.9, a: 1}
+  coreColorEnd: {r: 1, g: 0.4, b: 0, a: 0}
+  coreMaxSize: 1.2
+  coreDuration: 0.25
+  ringColor: {r: 1, g: 0.6, b: 0.1, a: 0.7}
+  ringMaxSize: 2.5
+  ringDuration: 0.4
+  sparkCount: 14
+  sparkSpeed: 5
+  sparkLifetime: 0.5
+  sparkColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  debrisCount: 8
+  debrisSpeed: 3
+  debrisColor: {r: 1, g: 0.4, b: 0.1, a: 0.9}
+  smokeMaxSize: 1.8
+  smokeDuration: 0.6
+  smokeColor: {r: 0.3, g: 0.2, b: 0.15, a: 0.5}
+  useLight: 1
+  lightIntensity: 3
+  lightColor: {r: 1, g: 0.5, b: 0.1, a: 1}

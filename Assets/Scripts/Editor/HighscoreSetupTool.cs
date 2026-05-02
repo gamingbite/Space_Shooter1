@@ -14,7 +14,7 @@ public class HighscoreSetupTool : EditorWindow
     public static void CreateHighscorePanel()
     {
         // Tìm MainMenuCanvas trong Scene
-        Canvas canvas = Object.FindObjectOfType<Canvas>();
+        Canvas canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
         if (canvas == null)
         {
             Debug.LogError("[HighscoreSetupTool] Không tìm thấy Canvas! Hãy chạy 'Tools/Setup Main Menu' trước.");

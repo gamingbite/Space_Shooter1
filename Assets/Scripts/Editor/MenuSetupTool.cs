@@ -25,7 +25,7 @@ public class MenuSetupTool : EditorWindow
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // 2. Create Event System
-        if (Object.FindObjectOfType<EventSystem>() == null)
+        if (Object.FindFirstObjectByType<EventSystem>(FindObjectsInactive.Include) == null)
         {
             GameObject eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
